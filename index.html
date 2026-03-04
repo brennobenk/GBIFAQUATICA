@@ -6,6 +6,7 @@
     <title>Gerador de Tabela de Biota Aquática – Completo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ESTILOS ORIGINAIS (mantidos intactos) */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f0f7ff; color: #333; line-height: 1.6; padding: 20px; }
         .container { display: flex; flex-wrap: wrap; gap: 30px; max-width: 1600px; margin: 0 auto; }
@@ -57,13 +58,14 @@
         .taxon-preview-item { padding: 8px; border-bottom: 1px solid #e6f0ff; margin-bottom: 5px; }
         .column-gap { background: transparent; border: none; }
         @media (max-width: 1100px) { .container { flex-direction: column; } .input-section, .table-section { min-width: 100%; } }
+        .paste-area { margin-top: 30px; border-top: 2px dashed #1a6fa3; padding-top: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1><i class="fas fa-water"></i> Gerador de Tabela de Biota Aquática</h1>
-            <p class="subtitle">Baseado nos relatórios da ETE Espinheiros – Campanhas 2018–2025</p>
+            <p class="subtitle">Powered by Brenno Benk</p>
             <div class="group-badges">
                 <div class="group-badge active">Fitoplâncton</div>
                 <div class="group-badge">Zooplâncton</div>
@@ -120,6 +122,16 @@ Arthropoda"></textarea>
             <div class="btn-group">
                 <button id="add-btn" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Adicionar à Tabela</button>
                 <button id="clear-btn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Limpar Tabela</button>
+            </div>
+
+            <!-- Nova seção para colar tabela -->
+            <div class="paste-area">
+                <h3><i class="fas fa-paste"></i> Colar Tabela Taxonômica</h3>
+                <p class="instructions" style="font-size:0.9rem;">Cole aqui uma tabela com hierarquia (Filo, Classe, Ordem, Família e espécies). O sistema tentará reconhecer os nomes científicos e preencher a classificação automaticamente.</p>
+                <textarea id="paste-table" placeholder="Cole a tabela aqui..."></textarea>
+                <div class="btn-group">
+                    <button id="process-paste-btn" class="btn btn-success"><i class="fas fa-cogs"></i> Processar Tabela</button>
+                </div>
             </div>
 
             <div id="message" style="margin-top:20px;"></div>
@@ -198,6 +210,7 @@ Arthropoda"></textarea>
 
     <script>
         // ==================== BASE DE DADOS COMPLETA (TODOS OS TÁXONS) ====================
+        // Esta seção contém TODOS os táxons originais (mais de 1200 linhas) + os novos no final
         const aquaticBiotaDatabase = [
             // #######################################################################
             // ####################### FITOPLÂNCTON ##################################
@@ -808,7 +821,136 @@ Arthropoda"></textarea>
             { scientificName: "Sphoeroides greeleyi", vernacularName: "baiacu-pinima", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Tetraodontiformes", family: "Tetraodontidae", genus: "Sphoeroides", specificEpithet: "greeleyi" },
             { scientificName: "Sphoeroides spengleri", vernacularName: "baiacu", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Tetraodontiformes", family: "Tetraodontidae", genus: "Sphoeroides", specificEpithet: "spengleri" },
             { scientificName: "Sphoeroides testudineus", vernacularName: "baiacu-mirim", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Tetraodontiformes", family: "Tetraodontidae", genus: "Sphoeroides", specificEpithet: "testudineus" },
-            { scientificName: "Sphoeroides tyleri", vernacularName: "baiacu", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Tetraodontiformes", family: "Tetraodontidae", genus: "Sphoeroides", specificEpithet: "tyleri" }
+            { scientificName: "Sphoeroides tyleri", vernacularName: "baiacu", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Tetraodontiformes", family: "Tetraodontidae", genus: "Sphoeroides", specificEpithet: "tyleri" },
+            
+            // ==================== NOVOS TÁXONS ADICIONADOS (FITOPLÂNCTON) ====================
+            // Filo Bacillariophyta
+            { scientificName: "Achnanthidium minutissimum", vernacularName: "diatomácea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Bacillariophyta", class: "Bacillariophyceae", order: "Achnanthales", family: "Achnanthidiaceae", genus: "Achnanthidium", specificEpithet: "minutissimum" },
+            { scientificName: "Nitzschia palea", vernacularName: "diatomácea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Bacillariophyta", class: "Bacillariophyceae", order: "Bacillariales", family: "Bacillariaceae", genus: "Nitzschia", specificEpithet: "palea" },
+            { scientificName: "Gomphonema parvulum", vernacularName: "diatomácea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Bacillariophyta", class: "Bacillariophyceae", order: "Cymbellales", family: "Gomphonemataceae", genus: "Gomphonema", specificEpithet: "parvulum" },
+            { scientificName: "Frustulia rhomboides", vernacularName: "diatomácea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Bacillariophyta", class: "Bacillariophyceae", order: "Naviculales", family: "Amphipleuraceae", genus: "Frustulia", specificEpithet: "rhomboides" },
+            { scientificName: "Surirella sp.", vernacularName: "diatomácea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Bacillariophyta", class: "Bacillariophyceae", order: "Suriellales", family: "Surirellaceae", genus: "Surirella", specificEpithet: "" },
+            { scientificName: "Aulacoseira ambigua", vernacularName: "diatomácea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Bacillariophyta", class: "Coscinodiscophyceae", order: "Aulacoseirales", family: "Aulacoseiraceae", genus: "Aulacoseira", specificEpithet: "ambigua" },
+            { scientificName: "Melosira varians", vernacularName: "diatomácea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Bacillariophyta", class: "Coscinodiscophyceae", order: "Melosirales", family: "Melosiraceae", genus: "Melosira", specificEpithet: "varians" },
+            { scientificName: "Stephanocyclus meneghinianus", vernacularName: "diatomácea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Bacillariophyta", class: "Mediophyceae", order: "Stephanodiscales", family: "Stephanodiscaceae", genus: "Stephanocyclus", specificEpithet: "meneghinianus" },
+            { scientificName: "Skeletonema costatum", vernacularName: "diatomácea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Bacillariophyta", class: "Mediophyceae", order: "Thalassiosirales", family: "Skeletonemataceae", genus: "Skeletonema", specificEpithet: "costatum" },
+            // Filo Chlorophyta
+            { scientificName: "Pediastrum sp.", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Chlorophyceae", order: "Sphaeropleales", family: "Hydrodictyaceae", genus: "Pediastrum", specificEpithet: "" },
+            { scientificName: "Coelastrum indicum", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Chlorophyceae", order: "Sphaeropleales", family: "Scenedesmaceae", genus: "Coelastrum", specificEpithet: "indicum" },
+            { scientificName: "Desmodesmus armatus", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Chlorophyceae", order: "Sphaeropleales", family: "Scenedesmaceae", genus: "Desmodesmus", specificEpithet: "armatus" },
+            { scientificName: "Desmodesmus brasiliensis", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Chlorophyceae", order: "Sphaeropleales", family: "Scenedesmaceae", genus: "Desmodesmus", specificEpithet: "brasiliensis" },
+            { scientificName: "Scenedesmus ecornis", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Chlorophyceae", order: "Sphaeropleales", family: "Scenedesmaceae", genus: "Scenedesmus", specificEpithet: "ecornis" },
+            { scientificName: "Scenedesmus obtusus", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Chlorophyceae", order: "Sphaeropleales", family: "Scenedesmaceae", genus: "Scenedesmus", specificEpithet: "obtusus" },
+            { scientificName: "Tetradesmus lagerheimii", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Chlorophyceae", order: "Sphaeropleales", family: "Scenedesmaceae", genus: "Tetradesmus", specificEpithet: "lagerheimii" },
+            { scientificName: "Monoraphidium komarkovae", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Chlorophyceae", order: "Sphaeropleales", family: "Selenastraceae", genus: "Monoraphidium", specificEpithet: "komarkovae" },
+            { scientificName: "Oocystis sp.", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Trebouxiophyceae", order: "Chlorellales", family: "Oocystaceae", genus: "Oocystis", specificEpithet: "" },
+            { scientificName: "Crucigenia pulchra", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Trebouxiophyceae", order: "Chlorellales", family: "Trebouxiophyceae", genus: "Crucigenia", specificEpithet: "pulchra" },
+            { scientificName: "Dictyosphaerium sp.", vernacularName: "alga verde", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Chlorophyta", class: "Trebouxiophyceae", order: "Chlorellales", family: "Chlorellaceae", genus: "Dictyosphaerium", specificEpithet: "" },
+            // Filo Charophyta
+            { scientificName: "Closterium gracile", vernacularName: "desmídea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Charophyta", class: "Zygnematophyceae", order: "Desmidiales", family: "Closteriaceae", genus: "Closterium", specificEpithet: "gracile" },
+            { scientificName: "Cosmarium sp.", vernacularName: "desmídea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Charophyta", class: "Zygnematophyceae", order: "Desmidiales", family: "Desmidiaceae", genus: "Cosmarium", specificEpithet: "" },
+            { scientificName: "Euastrum sp.", vernacularName: "desmídea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Charophyta", class: "Zygnematophyceae", order: "Desmidiales", family: "Desmidiaceae", genus: "Euastrum", specificEpithet: "" },
+            { scientificName: "Spirogyra sp.", vernacularName: "desmídea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Charophyta", class: "Zygnematophyceae", order: "Spirogyrales", family: "Spirogyraceae", genus: "Spirogyra", specificEpithet: "" },
+            // Filo Cryptista
+            { scientificName: "Cryptomonas brasiliensis", vernacularName: "criptofícea", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Cryptista", class: "Cryptophyceae", order: "Cryptomonadales", family: "Cryptomonadaceae", genus: "Cryptomonas", specificEpithet: "brasiliensis" },
+            // Filo Cyanobacteria
+            { scientificName: "Aphanocapsa sp.", vernacularName: "cianobactéria", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Cyanobacteria", class: "Cyanophyceae", order: "Chroococcales", family: "Microcystaceae", genus: "Aphanocapsa", specificEpithet: "" },
+            { scientificName: "Merismopedia sp.", vernacularName: "cianobactéria", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Cyanobacteria", class: "Cyanophyceae", order: "Chroococcales", family: "Microcystaceae", genus: "Merismopedia", specificEpithet: "" },
+            { scientificName: "Dolichospermum spiroides", vernacularName: "cianobactéria", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Cyanobacteria", class: "Cyanophyceae", order: "Nostocales", family: "Aphanizomenonaceae", genus: "Dolichospermum", specificEpithet: "spiroides" },
+            { scientificName: "Phormidium sp.", vernacularName: "cianobactéria", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Cyanobacteria", class: "Cyanophyceae", order: "Oscillatoriales", family: "Oscillatoriaceae", genus: "Phormidium", specificEpithet: "" },
+            // Filo Euglenozoa
+            { scientificName: "Euglena sp.", vernacularName: "euglenóide", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Euglenozoa", class: "Euglenophyceae", order: "Euglenida", family: "Euglenaceae", genus: "Euglena", specificEpithet: "" },
+            { scientificName: "Phacus sp.", vernacularName: "euglenóide", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Euglenozoa", class: "Euglenophyceae", order: "Euglenida", family: "Euglenaceae", genus: "Phacus", specificEpithet: "" },
+            { scientificName: "Trachelomonas volvocina", vernacularName: "euglenóide", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Euglenozoa", class: "Euglenophyceae", order: "Euglenida", family: "Euglenaceae", genus: "Trachelomonas", specificEpithet: "volvocina" },
+            // Filo Miozoa
+            { scientificName: "Prorocentrum minimum", vernacularName: "dinoflagelado", group: "fitoplankton", kingdom: "Eukaryota", phylum: "Miozoa", class: "Dinophyceae", order: "Prorocentrales", family: "Prorocentraceae", genus: "Prorocentrum", specificEpithet: "minimum" },
+
+            // ==================== ZOOPLÂNCTON ====================
+            // Filo Rhizopoda
+            { scientificName: "Arcella costata", vernacularName: "tecameba", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rhizopoda", class: "Lobosea", order: "Testacea", family: "Arcellidae", genus: "Arcella", specificEpithet: "costata" },
+            { scientificName: "Arcella discoides", vernacularName: "tecameba", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rhizopoda", class: "Lobosea", order: "Testacea", family: "Arcellidae", genus: "Arcella", specificEpithet: "discoides" },
+            { scientificName: "Arcella mitrata spectabilis", vernacularName: "tecameba", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rhizopoda", class: "Lobosea", order: "Testacea", family: "Arcellidae", genus: "Arcella", specificEpithet: "mitrata spectabilis" },
+            { scientificName: "Arcella rota", vernacularName: "tecameba", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rhizopoda", class: "Lobosea", order: "Testacea", family: "Arcellidae", genus: "Arcella", specificEpithet: "rota" },
+            { scientificName: "Centropyxis aculeata", vernacularName: "tecameba", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rhizopoda", class: "Lobosea", order: "Testacea", family: "Centropyxidae", genus: "Centropyxis", specificEpithet: "aculeata" },
+            { scientificName: "Cucurbitella sp.", vernacularName: "tecameba", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rhizopoda", class: "Lobosea", order: "Testacea", family: "Difflugiidae", genus: "Cucurbitella", specificEpithet: "" },
+            { scientificName: "Difflugia acutissima", vernacularName: "tecameba", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rhizopoda", class: "Lobosea", order: "Testacea", family: "Difflugiidae", genus: "Difflugia", specificEpithet: "acutissima" },
+            { scientificName: "Difflugia corona", vernacularName: "tecameba", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rhizopoda", class: "Lobosea", order: "Testacea", family: "Difflugiidae", genus: "Difflugia", specificEpithet: "corona" },
+            { scientificName: "Difflugia sp.", vernacularName: "tecameba", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rhizopoda", class: "Lobosea", order: "Testacea", family: "Difflugiidae", genus: "Difflugia", specificEpithet: "" },
+            // Filo Rotifera
+            { scientificName: "Brachionus calyciflorus", vernacularName: "rotífero", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rotifera", class: "Eurotatoria", order: "Ploima", family: "Brachionidae", genus: "Brachionus", specificEpithet: "calyciflorus" },
+            { scientificName: "Keratella tropica", vernacularName: "rotífero", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rotifera", class: "Eurotatoria", order: "Ploima", family: "Brachionidae", genus: "Keratella", specificEpithet: "tropica" },
+            { scientificName: "Lecane curvicornis", vernacularName: "rotífero", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rotifera", class: "Eurotatoria", order: "Ploima", family: "Lecanidae", genus: "Lecane", specificEpithet: "curvicornis" },
+            { scientificName: "Synchaeta pectinata", vernacularName: "rotífero", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rotifera", class: "Eurotatoria", order: "Ploima", family: "Synchaetidae", genus: "Synchaeta", specificEpithet: "pectinata" },
+            { scientificName: "Polyarthra vulgaris", vernacularName: "rotífero", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rotifera", class: "Eurotatoria", order: "Ploima", family: "Synchaetidae", genus: "Polyarthra", specificEpithet: "vulgaris" },
+            { scientificName: "Trichocerca cylindrica", vernacularName: "rotífero", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rotifera", class: "Eurotatoria", order: "Ploima", family: "Trichocercidae", genus: "Trichocerca", specificEpithet: "cylindrica" },
+            { scientificName: "Filinia longiseta", vernacularName: "rotífero", group: "zooplankton", kingdom: "Eukaryota", phylum: "Rotifera", class: "Eurotatoria", order: "Ploima", family: "Trochosphaeridae", genus: "Filinia", specificEpithet: "longiseta" },
+            // Filo Arthropoda (zooplankton)
+            { scientificName: "Thermocyclops decipiens", vernacularName: "copépode", group: "zooplankton", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Maxillopoda", order: "Cyclopoida", family: "Cyclopidae", genus: "Thermocyclops", specificEpithet: "decipiens" },
+            { scientificName: "Euterpina acutifrons", vernacularName: "copépode", group: "zooplankton", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Maxillopoda", order: "Harpacticoida", family: "Tachidiidae", genus: "Euterpina", specificEpithet: "acutifrons" },
+            { scientificName: "Bosmina freyi", vernacularName: "cladócero; pulga d'água", group: "zooplankton", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Branchiopoda", order: "Anomopoda", family: "Bosminidae", genus: "Bosmina", specificEpithet: "freyi" },
+            { scientificName: "Ilyocryptus spinifer", vernacularName: "cladócero; pulga d'água", group: "zooplankton", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Branchiopoda", order: "Anomopoda", family: "Ilyocryptidae", genus: "Ilyocryptus", specificEpithet: "spinifer" },
+            { scientificName: "Moina minuta", vernacularName: "cladócero; pulga d'água", group: "zooplankton", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Branchiopoda", order: "Anomopoda", family: "Moinidae", genus: "Moina", specificEpithet: "minuta" },
+
+            // ==================== MACROFAUNA BENTÔNICA ====================
+            // Filo Annelida
+            { scientificName: "Hirudinea", vernacularName: "sanguessuga", group: "macrofauna", kingdom: "Eukaryota", phylum: "Annelida", class: "Clitellata", order: "", family: "", genus: "", specificEpithet: "" },
+            { scientificName: "Oligochaeta", vernacularName: "oligoqueta", group: "macrofauna", kingdom: "Eukaryota", phylum: "Annelida", class: "Clitellata", order: "", family: "", genus: "", specificEpithet: "" },
+            // Filo Arthropoda (macrofauna)
+            { scientificName: "Tetragnathidae", vernacularName: "aranha", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Arachnida", order: "Araneae", family: "Tetragnathidae", genus: "", specificEpithet: "" },
+            { scientificName: "Curculionidae", vernacularName: "besouro", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Coleoptera", family: "Curculionidae", genus: "", specificEpithet: "" },
+            { scientificName: "Noteridae", vernacularName: "besouro", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Coleoptera", family: "Noteridae", genus: "", specificEpithet: "" },
+            { scientificName: "Elateroidea", vernacularName: "besouro", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Coleoptera", family: "", genus: "", specificEpithet: "" },
+            { scientificName: "Chironomidae", vernacularName: "quironomídeo", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Diptera", family: "Chironomidae", genus: "", specificEpithet: "" },
+            { scientificName: "Baetidae", vernacularName: "efemeróptero", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Ephemeroptera", family: "Baetidae", genus: "", specificEpithet: "" },
+            { scientificName: "Americabaetis sp.", vernacularName: "efemeróptero", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Ephemeroptera", family: "Baetidae", genus: "Americabaetis", specificEpithet: "" },
+            { scientificName: "Caenidae", vernacularName: "efemeróptero", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Ephemeroptera", family: "Caenidae", genus: "", specificEpithet: "" },
+            { scientificName: "Cicadelidae", vernacularName: "cigarrinha", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Hemiptera", family: "Cicadelidae", genus: "", specificEpithet: "" },
+            { scientificName: "Belostomatidae", vernacularName: "barata d'água", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Hemiptera", family: "Belostomatidae", genus: "", specificEpithet: "" },
+            { scientificName: "Gerridae", vernacularName: "alfaiate", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Hemiptera", family: "Gerridae", genus: "", specificEpithet: "" },
+            { scientificName: "Noctonectidae", vernacularName: "percevejo", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Hemiptera", family: "Noctonectidae", genus: "", specificEpithet: "" },
+            { scientificName: "Veliidae", vernacularName: "percevejo", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Hemiptera", family: "Veliidae", genus: "", specificEpithet: "" },
+            { scientificName: "Noctuidae", vernacularName: "mariposa", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Lepidoptera", family: "Noctuidae", genus: "", specificEpithet: "" },
+            { scientificName: "Pyralidae", vernacularName: "mariposa", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Lepidoptera", family: "Pyralidae", genus: "", specificEpithet: "" },
+            { scientificName: "Calopterygidae", vernacularName: "libélula", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Odonata", family: "Calopterygidae", genus: "", specificEpithet: "" },
+            { scientificName: "Coenagrionidae", vernacularName: "libélula", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Odonata", family: "Coenagrionidae", genus: "", specificEpithet: "" },
+            { scientificName: "Gomphidae", vernacularName: "libélula", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Odonata", family: "Gomphidae", genus: "", specificEpithet: "" },
+            { scientificName: "Aeshnidae", vernacularName: "libélula", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Odonata", family: "Aeshnidae", genus: "", specificEpithet: "" },
+            { scientificName: "Hydropsychidae", vernacularName: "tricóptero", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Insecta", order: "Trichoptera", family: "Hydropsychidae", genus: "", specificEpithet: "" },
+            { scientificName: "Trichodactylus dentatus", vernacularName: "caranguejo", group: "macrofauna", kingdom: "Eukaryota", phylum: "Arthropoda", class: "Malacostraca", order: "Decapoda", family: "Trichodactylidae", genus: "Trichodactylus", specificEpithet: "dentatus" },
+            // Filo Mollusca
+            { scientificName: "Corbicula fluminea", vernacularName: "bivalve", group: "macrofauna", kingdom: "Eukaryota", phylum: "Mollusca", class: "Bivalvia", order: "Venerida", family: "Cyrenidae", genus: "Corbicula", specificEpithet: "fluminea" },
+            { scientificName: "Omalonyx", vernacularName: "gastrópode", group: "macrofauna", kingdom: "Eukaryota", phylum: "Mollusca", class: "Gastropoda", order: "", family: "Succineidae", genus: "Omalonyx", specificEpithet: "" },
+            { scientificName: "Physidae", vernacularName: "gastrópode", group: "macrofauna", kingdom: "Eukaryota", phylum: "Mollusca", class: "Gastropoda", order: "Basommatophora", family: "Physidae", genus: "", specificEpithet: "" },
+            { scientificName: "Biomphalaria", vernacularName: "gastrópode", group: "macrofauna", kingdom: "Eukaryota", phylum: "Mollusca", class: "Gastropoda", order: "Basommatophora", family: "Physidae", genus: "Biomphalaria", specificEpithet: "" },
+            { scientificName: "Pomacea sp.", vernacularName: "gastrópode", group: "macrofauna", kingdom: "Eukaryota", phylum: "Mollusca", class: "Gastropoda", order: "Caenogastropoda", family: "Ampullaridae", genus: "Pomacea", specificEpithet: "" },
+            { scientificName: "Melanoides tuberculata", vernacularName: "gastrópode", group: "macrofauna", kingdom: "Eukaryota", phylum: "Mollusca", class: "Gastropoda", order: "Caenogastropoda", family: "Thiaridae", genus: "Melanoides", specificEpithet: "tuberculata" },
+            { scientificName: "Cochliopidae", vernacularName: "gastrópode", group: "macrofauna", kingdom: "Eukaryota", phylum: "Mollusca", class: "Gastropoda", order: "Littorinimorpha", family: "Cochliopidae", genus: "", specificEpithet: "" },
+            { scientificName: "Littorinidae", vernacularName: "gastrópode", group: "macrofauna", kingdom: "Eukaryota", phylum: "Mollusca", class: "Gastropoda", order: "Littorinimorpha", family: "Littorinidae", genus: "", specificEpithet: "" },
+
+            // ==================== ICTIOFAUNA ====================
+            { scientificName: "Characidium pterostictum", vernacularName: "canivete", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Crenuchidae", genus: "Characidium", specificEpithet: "pterostictum" },
+            { scientificName: "Cyphocharax santacatarinae", vernacularName: "branquinha", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Curimatidae", genus: "Cyphocharax", specificEpithet: "santacatarinae" },
+            { scientificName: "Astyanax jacuhiensis", vernacularName: "lambari", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Characidae", genus: "Astyanax", specificEpithet: "jacuhiensis" },
+            { scientificName: "Astyanax laticeps", vernacularName: "lambari", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Characidae", genus: "Astyanax", specificEpithet: "laticeps" },
+            { scientificName: "Astyanax sp.", vernacularName: "lambari", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Characidae", genus: "Astyanax", specificEpithet: "" },
+            { scientificName: "Deuterodon heterostomus", vernacularName: "lambari", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Characidae", genus: "Deuterodon", specificEpithet: "heterostomus" },
+            { scientificName: "Deuterodon luetkenii", vernacularName: "lambari", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Characidae", genus: "Deuterodon", specificEpithet: "luetkenii" },
+            { scientificName: "Hyphessobrycon boulengeri", vernacularName: "lambari", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Characidae", genus: "Hyphessobrycon", specificEpithet: "boulengeri" },
+            { scientificName: "Hyphessobrycon griemi", vernacularName: "lambari", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Characidae", genus: "Hyphessobrycon", specificEpithet: "griemi" },
+            { scientificName: "Oligosarcus hepsetus", vernacularName: "saicanga", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Characidae", genus: "Oligosarcus", specificEpithet: "hepsetus" },
+            { scientificName: "Psalidodon fasciatus", vernacularName: "lambari", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Characiformes", family: "Characidae", genus: "Psalidodon", specificEpithet: "fasciatus" },
+            { scientificName: "Callichthys callichthys", vernacularName: "limpa-fundo", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Siluriformes", family: "Callichthyidae", genus: "Callichthys", specificEpithet: "callichthys" },
+            { scientificName: "Corydoras ehrhardti", vernacularName: "coridora", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Siluriformes", family: "Callichthyidae", genus: "Corydoras", specificEpithet: "ehrhardti" },
+            { scientificName: "Hisonotus leucofrenatus", vernacularName: "cascudinho", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Siluriformes", family: "Loricariidae", genus: "Hisonotus", specificEpithet: "leucofrenatus" },
+            { scientificName: "Pseudotothyris obtusa", vernacularName: "cascudinho", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Siluriformes", family: "Loricariidae", genus: "Pseudotothyris", specificEpithet: "obtusa" },
+            { scientificName: "Rineloricaria sp.", vernacularName: "cascudo", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Siluriformes", family: "Loricariidae", genus: "Rineloricaria", specificEpithet: "" },
+            { scientificName: "Rhamdia quelen", vernacularName: "jundiá", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Siluriformes", family: "Heptapteridae", genus: "Rhamdia", specificEpithet: "quelen" },
+            { scientificName: "Pimelodella pappenheimi", vernacularName: "bagrinho", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Siluriformes", family: "Heptapteridae", genus: "Pimelodella", specificEpithet: "pappenheimi" },
+            { scientificName: "Microglanis cottoides", vernacularName: "bagrinho", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Siluriformes", family: "Pseudopimelodidae", genus: "Microglanis", specificEpithet: "cottoides" },
+            { scientificName: "Geophagus brasiliensis", vernacularName: "cará", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Cichliformes", family: "Cichlidae", genus: "Geophagus", specificEpithet: "brasiliensis" },
+            { scientificName: "Oreochromis niloticus", vernacularName: "tilápia-do-nilo", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Cichliformes", family: "Cichlidae", genus: "Oreochromis", specificEpithet: "niloticus" },
+            { scientificName: "Phalloceros megapolos", vernacularName: "barrigudinho", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Cyprinodontiformes", family: "Poeciliidae", genus: "Phalloceros", specificEpithet: "megapolos" },
+            { scientificName: "Poecilia vivipara", vernacularName: "barrigudinho", group: "ictiofauna", kingdom: "Eukaryota", phylum: "Chordata", class: "Actinopterygii", order: "Cyprinodontiformes", family: "Poeciliidae", genus: "Poecilia", specificEpithet: "vivipara" }
         ];
 
         // ==================== LÓGICA DO SISTEMA ====================
@@ -851,6 +993,9 @@ Arthropoda"></textarea>
         const saveEditBtn = document.getElementById('save-edit');
         const cancelEditBtn = document.getElementById('cancel-edit');
         const groupBadges = document.querySelectorAll('.group-badge');
+        // Elementos da nova funcionalidade
+        const pasteTableArea = document.getElementById('paste-table');
+        const processPasteBtn = document.getElementById('process-paste-btn');
 
         // Exibe o ano atual no footer (se o elemento existir)
         const currentYearSpan = document.getElementById('current-year');
@@ -1185,6 +1330,137 @@ Arthropoda"></textarea>
             showMessage("JSON exportado.", "success");
         }
 
+        // ==================== NOVA FUNÇÃO: PROCESSAR TABELA COLADA ====================
+        function parsePastedTable(text, defaultGroup) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            let currentPhylum = "", currentClass = "", currentOrder = "", currentFamily = "";
+            let extractedTaxa = [];
+
+            lines.forEach(line => {
+                // Ignorar linhas que são apenas números ou cabeçalhos
+                if (/^[0-9.,]+$/.test(line)) return;
+                if (line.startsWith('Composição') || line.startsWith('Nome') || line.startsWith('Hábito') || line.includes('ECOAQUATICA')) return;
+
+                // Detectar níveis hierárquicos
+                if (line.startsWith('Filo ')) {
+                    currentPhylum = line.replace('Filo ', '').trim();
+                    currentClass = currentOrder = currentFamily = "";
+                } else if (line.startsWith('Classe ')) {
+                    currentClass = line.replace('Classe ', '').trim();
+                    currentOrder = currentFamily = "";
+                } else if (line.startsWith('Ordem ')) {
+                    currentOrder = line.replace('Ordem ', '').trim();
+                    currentFamily = "";
+                } else if (line.startsWith('Família ')) {
+                    currentFamily = line.replace('Família ', '').trim();
+                } else {
+                    // Tentar extrair nome científico (primeiras duas palavras)
+                    const words = line.split(/\s+/);
+                    if (words.length >= 2) {
+                        let potentialGenus = words[0];
+                        let potentialSpecies = words[1];
+                        // Verificar se parece um nome científico (começa com maiúscula, etc.)
+                        if (potentialGenus[0] === potentialGenus[0].toUpperCase() && potentialSpecies[0] === potentialSpecies[0].toLowerCase()) {
+                            // Possível espécie
+                            let scientificName = potentialGenus + ' ' + potentialSpecies;
+                            // Tentar encontrar nome popular (próximas palavras até encontrar um número)
+                            let vernacular = "";
+                            for (let i = 2; i < words.length; i++) {
+                                if (!isNaN(parseFloat(words[i]))) break;
+                                vernacular += words[i] + ' ';
+                            }
+                            vernacular = vernacular.trim() || "não informado";
+                            
+                            // Montar objeto do táxon
+                            let taxon = {
+                                scientificName: scientificName,
+                                vernacularName: vernacular,
+                                group: defaultGroup,
+                                kingdom: "Eukaryota",
+                                phylum: currentPhylum || "-",
+                                class: currentClass || "-",
+                                order: currentOrder || "-",
+                                family: currentFamily || "-",
+                                genus: potentialGenus,
+                                specificEpithet: potentialSpecies,
+                                qualifier: "",
+                                rank: "espécie"
+                            };
+                            extractedTaxa.push(taxon);
+                        } else {
+                            // Pode ser um táxon de nível superior (ex: gênero, família) sem marcador
+                            // Tentar buscar na base de dados
+                            let found = findTaxonData(line);
+                            if (found) {
+                                extractedTaxa.push({
+                                    ...found,
+                                    group: defaultGroup,
+                                    kingdom: found.kingdom || "Eukaryota",
+                                    phylum: found.phylum || currentPhylum || "-",
+                                    class: found.class || currentClass || "-",
+                                    order: found.order || currentOrder || "-",
+                                    family: found.family || currentFamily || "-",
+                                    genus: found.genus || "-",
+                                    specificEpithet: found.specificEpithet || "-",
+                                    rank: determineTaxonRank(found)
+                                });
+                            } else {
+                                // Se não encontrar, criar como gênero ou família placeholder
+                                if (words.length === 1) {
+                                    // Pode ser um gênero
+                                    extractedTaxa.push({
+                                        scientificName: line,
+                                        vernacularName: "não informado",
+                                        group: defaultGroup,
+                                        kingdom: "Eukaryota",
+                                        phylum: currentPhylum || "-",
+                                        class: currentClass || "-",
+                                        order: currentOrder || "-",
+                                        family: currentFamily || "-",
+                                        genus: line,
+                                        specificEpithet: "",
+                                        qualifier: "",
+                                        rank: "gênero"
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            return extractedTaxa;
+        }
+
+        function processPastedTable() {
+            let text = pasteTableArea.value.trim();
+            if (!text) { showMessage("Cole uma tabela primeiro.", "error"); return; }
+            let defaultGroup = groupSelect.value; // Usa o grupo selecionado atualmente
+            let taxa = parsePastedTable(text, defaultGroup);
+            if (taxa.length === 0) { showMessage("Nenhum táxon reconhecido na tabela.", "error"); return; }
+            taxa.forEach(t => {
+                taxonCounter++;
+                biotaData.push({
+                    id: taxonCounter,
+                    group: t.group === "fitoplankton" ? "Fitoplâncton" : t.group === "zooplankton" ? "Zooplâncton" : t.group === "macrofauna" ? "Macrofauna Bentônica" : "Ictiofauna",
+                    kingdom: t.kingdom,
+                    phylum: t.phylum,
+                    class: t.class,
+                    order: t.order,
+                    family: t.family,
+                    genus: t.genus,
+                    specificEpithet: t.specificEpithet,
+                    qualifier: t.qualifier || '',
+                    rank: t.rank,
+                    scientificName: t.scientificName,
+                    vernacularName: t.vernacularName
+                });
+            });
+            updateTable();
+            updateSpeciesCount();
+            pasteTableArea.value = '';
+            showMessage(`${taxa.length} táxons adicionados a partir da tabela.`, "success");
+        }
+
         // Eventos
         addBtn.addEventListener('click', addToTable);
         clearBtn.addEventListener('click', clearTable);
@@ -1196,6 +1472,7 @@ Arthropoda"></textarea>
         speciesInput.addEventListener('keydown', (e) => { if (e.ctrlKey && e.key === 'Enter') addToTable(); });
         editVernacularName.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveEdit(); });
         window.addEventListener('click', (e) => { if (e.target === editModal) editModal.style.display = 'none'; });
+        processPasteBtn.addEventListener('click', processPastedTable);
 
         // Inicialização
         setInputMode('lines');
